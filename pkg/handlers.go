@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/a-h/templ"
 	"github.com/go-faker/faker/v4"
 	"github.com/gofiber/fiber/v2"
+	"github.com/huandu/go-sqlbuilder"
 	"github.com/jmoiron/sqlx"
 	"github.com/stneto1/htmx-webcomponents/views"
 )
@@ -91,15 +93,40 @@ func (c *Container) reseed(ctx context.Context) error {
 	return nil
 }
 
+var availableColumns = []string{
+	"id",
+	"name",
+	"value",
+	"value_2",
+	"value_3",
+	"created_at",
+}
+
 func (c *Container) getRecords(ctx context.Context) (*[]Record, error) {
 	qty := 10
 	order := "id"
 	direction := "DESC"
 
-	rows := make([]Record, qty)
+	if !slices.Contains(availableColumns, "id") {
+		return nil, fmt.Errorf("invalid column")
+	}
 
-	query := fmt.Sprintf("SELECT * FROM records ORDER BY %s %s LIMIT ?", order, direction)
-	if err := c.conn.SelectContext(ctx, &rows, query, qty); err != nil {
+	rows := make([]Record, qty)
+	builder := sqlbuilder.SQLite.
+		NewSelectBuilder().
+		Select("*").
+		From("records").
+		Limit(qty)
+
+	if direction == "DESC" {
+		builder = builder.Desc().OrderBy(order)
+	} else {
+		builder = builder.Asc().OrderBy(order)
+	}
+
+	sql, args := builder.Build()
+
+	if err := c.conn.SelectContext(ctx, &rows, sql, args...); err != nil {
 		log.Printf("failed to select records: %v\n", err)
 		return nil, err
 	}
