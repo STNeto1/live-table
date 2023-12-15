@@ -11,11 +11,32 @@ type EventBody struct {
 	Event    string `json:"event"`
 	ToPage   string `json:"to_page,omitempty"`
 	PageSize string `json:"page_size,omitempty"`
+	By       string `json:"by,omitempty"`
 }
 
 type TableState struct {
-	Page     int
-	PageSize int
+	Page           int
+	PageSize       int
+	OrderColumn    string
+	OrderDirection string
+}
+
+func (ts *TableState) UpdateDirection(newColumn string) {
+	if ts.OrderColumn == newColumn {
+		if ts.OrderDirection == "ASC" {
+			ts.OrderDirection = "DESC"
+		} else {
+			ts.OrderDirection = "ASC"
+		}
+	} else {
+		ts.OrderDirection = "DESC"
+	}
+
+	ts.OrderColumn = newColumn
+}
+
+func defaultTableState() *TableState {
+	return &TableState{Page: 1, PageSize: 10, OrderColumn: "id", OrderDirection: "DESC"}
 }
 
 type client struct {
@@ -34,7 +55,7 @@ func (c *Container) RunHub() {
 		select {
 		case connection := <-register:
 			clients[connection] = &client{}
-			states[connection] = &TableState{Page: 1, PageSize: 10}
+			states[connection] = defaultTableState()
 
 		case message := <-broadcast:
 			// Send the message to all clients

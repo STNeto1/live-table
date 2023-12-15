@@ -36,17 +36,22 @@ func render(component templ.Component, c *fiber.Ctx) error {
 }
 
 func (c *Container) IndexHandler(ctx *fiber.Ctx) error {
-	rows, pages, err := c.getRecords(ctx.Context(), TableState{
-		Page:     1,
-		PageSize: 10,
-	})
+	defaultState := defaultTableState()
+
+	rows, pages, err := c.getRecords(ctx.Context(), defaultState)
 	if err != nil {
 		log.Printf("failed to get records: %v\n", err)
 
 		rows = &[]Record{}
 	}
 
-	root := views.RootLayout("Page Title", mapRecordsIntoView(rows), "1", numberToStr(pages), "10")
+	root := views.RootLayout("Page Title", mapRecordsIntoView(rows),
+		numberToStr(defaultState.Page),
+		numberToStr(pages),
+		numberToStr(defaultState.PageSize),
+		defaultState.OrderColumn,
+		defaultState.OrderDirection,
+	)
 
 	return render(root, ctx)
 }
@@ -121,6 +126,12 @@ func (c *Container) RecordsWsHandler(ws *websocket.Conn) {
 				c.updateConnectionTableView(ws, states[ws])
 			}
 
+			if payload.Event == "change_order" {
+				states[ws].UpdateDirection(payload.By)
+
+				c.updateConnectionTableView(ws, states[ws])
+			}
+
 		} else {
 			log.Println("websocket message received of type", messageType)
 		}
@@ -128,13 +139,13 @@ func (c *Container) RecordsWsHandler(ws *websocket.Conn) {
 }
 
 func (c *Container) updateConnectionTableView(ws *websocket.Conn, state *TableState) {
-	rows, pages, err := c.getRecords(context.Background(), *state)
+	rows, pages, err := c.getRecords(context.Background(), state)
 	if err != nil {
 		log.Printf("failed to get records: %v\n", err)
 		return
 	}
 
-	component := views.RecordTable(mapRecordsIntoView(rows), numberToStr(state.Page), numberToStr(pages), numberToStr(state.PageSize))
+	component := views.RecordTable(mapRecordsIntoView(rows), numberToStr(state.Page), numberToStr(pages), numberToStr(state.PageSize), state.OrderColumn, state.OrderDirection)
 
 	htmlWriter := &bytes.Buffer{}
 	if err := component.Render(context.Background(), htmlWriter); err != nil {
@@ -196,13 +207,11 @@ var availableColumns = []string{
 	"created_at",
 }
 
-func (c *Container) getRecords(ctx context.Context, state TableState) (*[]Record, int, error) {
-	order := "id"
-	direction := "DESC"
+func (c *Container) getRecords(ctx context.Context, state *TableState) (*[]Record, int, error) {
 	offset := (state.Page - 1) * state.PageSize
 
-	if !slices.Contains(availableColumns, "id") {
-		order = "id"
+	if !slices.Contains(availableColumns, state.OrderColumn) {
+		state.OrderColumn = "id"
 	}
 
 	rows := make([]Record, state.PageSize)
@@ -213,10 +222,10 @@ func (c *Container) getRecords(ctx context.Context, state TableState) (*[]Record
 		Limit(int(state.PageSize)).
 		Offset(offset)
 
-	if direction == "DESC" {
-		builder = builder.Desc().OrderBy(order)
+	if state.OrderDirection == "DESC" {
+		builder = builder.Desc().OrderBy(state.OrderColumn)
 	} else {
-		builder = builder.Asc().OrderBy(order)
+		builder = builder.Asc().OrderBy(state.OrderColumn)
 	}
 
 	sql, args := builder.Build()

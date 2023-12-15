@@ -9,16 +9,22 @@ type ViewRecord struct {
 	CreatedAt string
 }
 
-templ RecordTable(records []ViewRecord, currentPage, pages, pageSize string) {
-	<table id="records" hx-swap-oob="true" data-current-page={ currentPage } data-pages={ pages } data-page-size={ pageSize }>
+templ RecordTable(records []ViewRecord, currentPage, pages, pageSize, orderBy, orderDirection string) {
+	<table id="records" 
+        hx-swap-oob="true" 
+        data-current-page={ currentPage } 
+        data-pages={ pages } 
+        data-page-size={ pageSize } 
+        data-order-by={ orderBy } 
+        data-order-direction={ orderDirection }>
 		<thead>
 			<tr>
-				<td>ID</td>
-				<td>Name</td>
-				<td>Value</td>
-				<td>Value 2</td>
-				<td>Value 3</td>
-				<td>Created At</td>
+				<td data-order-label="id" style="cursor: pointer">ID</td>
+				<td data-order-label="name" style="cursor: pointer">Name</td>
+				<td data-order-label="value" style="cursor: pointer">Value</td>
+				<td data-order-label="value_2" style="cursor: pointer">Value 2</td>
+				<td data-order-label="value_3" style="cursor: pointer">Value 3</td>
+				<td data-order-label="created_at" style="cursor: pointer">Created At</td>
 			</tr>
 		</thead>
 		<tbody>

@@ -50,6 +50,46 @@ class Controls extends HTMLElement {
 
 			htmx.process(form);
 		}
+
+		// create hidden direction forms
+		const directionsDiv = document.getElementById("directions");
+		directionsDiv.innerHTML = "";
+
+		const $directions = [
+			"id",
+			"name",
+			"value",
+			"value_2",
+			"value_3",
+			"created_at",
+		];
+		for (const direction of $directions) {
+			const form = this.createOrderForm(direction);
+			directionsDiv.appendChild(form);
+
+			htmx.process(form);
+
+			document
+				.querySelector(`[data-order-label="${direction}"]`)
+				.addEventListener("click", () => {
+					form.querySelector("button").click();
+				});
+		}
+
+		// style the selected col
+		const orderBy = table.dataset.orderBy;
+		const sortDirection = table.dataset.orderDirection;
+		const markedOrder = document.querySelector(
+			`[data-order-label="${orderBy}"]`,
+		);
+		if (!markedOrder) {
+			return;
+		}
+		markedOrder.style.fontWeight = "bold";
+		markedOrder.style.textDecoration = "underline";
+		markedOrder.textContent = [markedOrder.textContent, sortDirection].join(
+			" ",
+		);
 	}
 
 	createPageForm(page, currentPage) {
@@ -77,6 +117,19 @@ class Controls extends HTMLElement {
 							opt === currentSize ? "disabled" : ""
 						}> ${opt} </button>
 
+        `;
+		return form;
+	}
+
+	createOrderForm(orderBy) {
+		const form = document.createElement("form");
+		form.id = `direction-form-${orderBy}`;
+		form.setAttribute("ws-send", "");
+		form.hidden = true;
+		form.innerHTML = `
+            <input type="hidden" name="event" value="change_order"/>
+            <input type="hidden" name="by" value="${orderBy}"/>
+            <button type="submit">X</button>
         `;
 		return form;
 	}
