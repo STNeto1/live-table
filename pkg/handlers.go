@@ -17,6 +17,7 @@ import (
 	"github.com/huandu/go-sqlbuilder"
 	"github.com/jmoiron/sqlx"
 	"github.com/stneto1/htmx-webcomponents/views"
+	"golang.org/x/exp/constraints"
 )
 
 type Container struct {
@@ -119,7 +120,7 @@ func (c *Container) updateConnectionTableView(ws *websocket.Conn, state *TableSt
 		return
 	}
 
-	component := views.RecordTable(mapRecordsIntoView(rows), fmt.Sprintf("%d", states[ws].Page), "100")
+	component := views.RecordTable(mapRecordsIntoView(rows), numberToStr(state.Page), "100")
 
 	htmlWriter := &bytes.Buffer{}
 	if err := component.Render(context.Background(), htmlWriter); err != nil {
@@ -217,10 +218,10 @@ func (c *Container) getRecords(ctx context.Context, state TableState) (*[]Record
 
 func mapRecordIntoView(r Record) views.ViewRecord {
 	return views.ViewRecord{
-		ID:        fmt.Sprintf("%d", r.ID),
+		ID:        numberToStr(r.ID),
 		Name:      r.Name,
 		Value:     r.Value,
-		Value2:    fmt.Sprintf("%d", r.Value2),
+		Value2:    numberToStr(r.Value2),
 		Value3:    r.Value3.Format(time.RFC3339),
 		CreatedAt: r.CreatedAt.Format(time.RFC3339),
 	}
@@ -234,4 +235,12 @@ func mapRecordsIntoView(rs *[]Record) []views.ViewRecord {
 	}
 
 	return vrs
+}
+
+type Number interface {
+	constraints.Integer
+}
+
+func numberToStr[T Number](n T) string {
+	return fmt.Sprintf("%d", n)
 }
