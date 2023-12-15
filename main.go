@@ -3,12 +3,17 @@ package main
 import (
 	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/stneto1/htmx-webcomponents/pkg"
 	"github.com/stneto1/htmx-webcomponents/views"
 )
 
 func main() {
+	conn := pkg.CreateConnection()
+	container := pkg.NewContainer(conn)
+
 	app := fiber.New(fiber.Config{})
-	// app.Use(logger.New())
+	app.Use(logger.New())
 	app.Static("/public", "./public")
 
 	app.Get("/", func(c *fiber.Ctx) error {
@@ -16,6 +21,8 @@ func main() {
 
 		return render(btn, c)
 	})
+
+	app.Post("/reseed", container.ReseedHandler)
 
 	app.Listen(":3000")
 }
