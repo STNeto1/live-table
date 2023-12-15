@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"slices"
+	"strconv"
 	"time"
 
 	"github.com/a-h/templ"
@@ -34,7 +35,9 @@ func render(component templ.Component, c *fiber.Ctx) error {
 }
 
 func (c *Container) IndexHandler(ctx *fiber.Ctx) error {
-	rows, err := c.getRecords(ctx.Context())
+	rows, err := c.getRecords(ctx.Context(), TableState{
+		Page: 1,
+	})
 	if err != nil {
 		log.Printf("failed to get records: %v\n", err)
 
@@ -88,7 +91,7 @@ func (c *Container) RecordsWsHandler(ws *websocket.Conn) {
 					continue
 				}
 
-				rows, err := c.getRecords(context.Background())
+				rows, err := c.getRecords(context.Background(), *states[ws])
 				if err != nil {
 					log.Printf("failed to get records: %v\n", err)
 					continue
@@ -104,6 +107,32 @@ func (c *Container) RecordsWsHandler(ws *websocket.Conn) {
 
 				broadcast <- string(htmlWriter.Bytes())
 			}
+
+			if payload.Event == "change_page" {
+				parsed, err := strconv.ParseUint(payload.ToPage, 10, 64)
+				if err != nil {
+					continue
+				}
+
+				states[ws].Page = uint(parsed)
+
+				rows, err := c.getRecords(context.Background(), *states[ws])
+				if err != nil {
+					log.Printf("failed to get records: %v\n", err)
+					continue
+				}
+
+				component := views.RecordTable(mapRecordsIntoView(rows))
+
+				htmlWriter := &bytes.Buffer{}
+				if err := component.Render(context.Background(), htmlWriter); err != nil {
+					log.Println("error rendering component:", err)
+					continue
+				}
+
+				broadcast <- string(htmlWriter.Bytes())
+			}
+
 		} else {
 			log.Println("websocket message received of type", messageType)
 		}
@@ -161,10 +190,11 @@ var availableColumns = []string{
 	"created_at",
 }
 
-func (c *Container) getRecords(ctx context.Context) (*[]Record, error) {
+func (c *Container) getRecords(ctx context.Context, state TableState) (*[]Record, error) {
 	qty := 10
 	order := "id"
 	direction := "DESC"
+	offset := int(state.Page-1) * qty
 
 	if !slices.Contains(availableColumns, "id") {
 		return nil, fmt.Errorf("invalid column")
@@ -175,7 +205,8 @@ func (c *Container) getRecords(ctx context.Context) (*[]Record, error) {
 		NewSelectBuilder().
 		Select("*").
 		From("records").
-		Limit(qty)
+		Limit(qty).
+		Offset(offset)
 
 	if direction == "DESC" {
 		builder = builder.Desc().OrderBy(order)

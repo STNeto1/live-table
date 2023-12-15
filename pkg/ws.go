@@ -8,7 +8,12 @@ import (
 )
 
 type EventBody struct {
-	Event string `json:"event"`
+	Event  string `json:"event"`
+	ToPage string `json:"to_page"`
+}
+
+type TableState struct {
+	Page uint
 }
 
 type client struct {
@@ -17,6 +22,7 @@ type client struct {
 }
 
 var clients = make(map[*websocket.Conn]*client)
+var states = make(map[*websocket.Conn]*TableState)
 var register = make(chan *websocket.Conn)
 var broadcast = make(chan string)
 var unregister = make(chan *websocket.Conn)
@@ -26,6 +32,7 @@ func (c *Container) RunHub() {
 		select {
 		case connection := <-register:
 			clients[connection] = &client{}
+			states[connection] = &TableState{Page: 1}
 
 		case message := <-broadcast:
 			// Send the message to all clients
@@ -52,6 +59,7 @@ func (c *Container) RunHub() {
 		case connection := <-unregister:
 			// Remove the client from the hub
 			delete(clients, connection)
+			delete(states, connection)
 		}
 	}
 }
