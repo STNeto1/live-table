@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	conn := pkg.CreateConnection(false) // boolean for whether to log queries
+	conn := pkg.CreateConnection(true) // boolean for whether to log queries
 	container := pkg.NewContainer(conn)
 
 	app := fiber.New(fiber.Config{})

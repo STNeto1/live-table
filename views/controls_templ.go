@@ -31,7 +31,7 @@ func Controls() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button></form><div id=\"pages\" style=\"display: flex\"></div></wc-controls>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button></form><div id=\"page_sizes\" style=\"display: flex\"></div><div id=\"pages\" style=\"display: flex\"></div></wc-controls>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

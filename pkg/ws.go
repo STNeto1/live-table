@@ -8,12 +8,14 @@ import (
 )
 
 type EventBody struct {
-	Event  string `json:"event"`
-	ToPage string `json:"to_page"`
+	Event    string `json:"event"`
+	ToPage   string `json:"to_page,omitempty"`
+	PageSize string `json:"page_size,omitempty"`
 }
 
 type TableState struct {
-	Page uint
+	Page     int
+	PageSize int
 }
 
 type client struct {
@@ -32,7 +34,7 @@ func (c *Container) RunHub() {
 		select {
 		case connection := <-register:
 			clients[connection] = &client{}
-			states[connection] = &TableState{Page: 1}
+			states[connection] = &TableState{Page: 1, PageSize: 10}
 
 		case message := <-broadcast:
 			// Send the message to all clients

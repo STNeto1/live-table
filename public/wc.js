@@ -12,6 +12,7 @@ class Controls extends HTMLElement {
 	}
 
 	update() {
+		// create page buttons
 		const table = document.getElementById("records");
 		const pagesDiv = document.getElementById("pages");
 		pagesDiv.innerHTML = "";
@@ -24,11 +25,6 @@ class Controls extends HTMLElement {
 		const currentPage = parseInt(table.dataset.currentPage);
 		const totalPages = parseInt(table.dataset.pages);
 
-		console.log({
-			currentPage,
-			totalPages,
-		});
-
 		const $pages = this.getPagingRange(currentPage, {
 			total: totalPages,
 			length: 7,
@@ -37,6 +33,20 @@ class Controls extends HTMLElement {
 		for (const page of $pages) {
 			const form = this.createPageForm(page, currentPage);
 			pagesDiv.appendChild(form);
+
+			htmx.process(form);
+		}
+
+		// create page size buttons
+		const pagesSizesDiv = document.getElementById("page_sizes");
+		pagesSizesDiv.innerHTML = "";
+
+		const pageSize = parseInt(table.dataset.pageSize);
+		const $options = [10, 20, 50, 100];
+
+		for (const opt of $options) {
+			const form = this.createPageSizeForm(opt, pageSize);
+			pagesSizesDiv.appendChild(form);
 
 			htmx.process(form);
 		}
@@ -52,6 +62,21 @@ class Controls extends HTMLElement {
             <button type="submit" ${
 							page === currentPage ? "disabled" : ""
 						}>${page}</button>
+        `;
+		return form;
+	}
+
+	createPageSizeForm(opt, currentSize) {
+		const form = document.createElement("form");
+		form.id = `page-size-form-${opt}`;
+		form.setAttribute("ws-send", "");
+		form.innerHTML = `
+            <input type="hidden" name="event" value="change_page_size"/>
+            <input type="hidden" name="page_size" value="${opt}"/>
+            <button type="submit" ${
+							opt === currentSize ? "disabled" : ""
+						}> ${opt} </button>
+
         `;
 		return form;
 	}

@@ -18,7 +18,7 @@ type ViewRecord struct {
 	CreatedAt string
 }
 
-func RecordTable(records []ViewRecord, currentPage string, pages string) templ.Component {
+func RecordTable(records []ViewRecord, currentPage, pages, pageSize string) templ.Component {
 	return templ.ComponentFunc(func(templ_7745c5c3_Ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 		if !templ_7745c5c3_IsBuffer {
@@ -44,6 +44,14 @@ func RecordTable(records []ViewRecord, currentPage string, pages string) templ.C
 			return templ_7745c5c3_Err
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(pages))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" data-page-size=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(pageSize))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

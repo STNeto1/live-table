@@ -37,7 +37,8 @@ func render(component templ.Component, c *fiber.Ctx) error {
 
 func (c *Container) IndexHandler(ctx *fiber.Ctx) error {
 	rows, pages, err := c.getRecords(ctx.Context(), TableState{
-		Page: 1,
+		Page:     1,
+		PageSize: 10,
 	})
 	if err != nil {
 		log.Printf("failed to get records: %v\n", err)
@@ -45,7 +46,7 @@ func (c *Container) IndexHandler(ctx *fiber.Ctx) error {
 		rows = &[]Record{}
 	}
 
-	root := views.RootLayout("Page Title", mapRecordsIntoView(rows), "1", numberToStr(pages))
+	root := views.RootLayout("Page Title", mapRecordsIntoView(rows), "1", numberToStr(pages), "10")
 
 	return render(root, ctx)
 }
@@ -96,15 +97,28 @@ func (c *Container) RecordsWsHandler(ws *websocket.Conn) {
 			}
 
 			if payload.Event == "change_page" {
-				parsed, err := strconv.ParseUint(payload.ToPage, 10, 64)
+				parsed, err := strconv.ParseInt(payload.ToPage, 10, 64)
 				if err != nil {
+					log.Println("error parsing page:", err)
 					continue
 				}
 
-				states[ws].Page = uint(parsed)
+				states[ws].Page = int(parsed)
 
 				c.updateConnectionTableView(ws, states[ws])
 
+			}
+
+			if payload.Event == "change_page_size" {
+				parsed, err := strconv.ParseInt(payload.PageSize, 10, 64)
+				if err != nil {
+					log.Println("error parsing page size:", err)
+					continue
+				}
+
+				states[ws].PageSize = int(parsed)
+
+				c.updateConnectionTableView(ws, states[ws])
 			}
 
 		} else {
@@ -114,13 +128,13 @@ func (c *Container) RecordsWsHandler(ws *websocket.Conn) {
 }
 
 func (c *Container) updateConnectionTableView(ws *websocket.Conn, state *TableState) {
-	rows, pages, err := c.getRecords(context.Background(), *states[ws])
+	rows, pages, err := c.getRecords(context.Background(), *state)
 	if err != nil {
 		log.Printf("failed to get records: %v\n", err)
 		return
 	}
 
-	component := views.RecordTable(mapRecordsIntoView(rows), numberToStr(state.Page), numberToStr(pages))
+	component := views.RecordTable(mapRecordsIntoView(rows), numberToStr(state.Page), numberToStr(pages), numberToStr(state.PageSize))
 
 	htmlWriter := &bytes.Buffer{}
 	if err := component.Render(context.Background(), htmlWriter); err != nil {
@@ -183,21 +197,20 @@ var availableColumns = []string{
 }
 
 func (c *Container) getRecords(ctx context.Context, state TableState) (*[]Record, int, error) {
-	qty := 10
 	order := "id"
 	direction := "DESC"
-	offset := int(state.Page-1) * qty
+	offset := (state.Page - 1) * state.PageSize
 
 	if !slices.Contains(availableColumns, "id") {
 		order = "id"
 	}
 
-	rows := make([]Record, qty)
+	rows := make([]Record, state.PageSize)
 	builder := sqlbuilder.SQLite.
 		NewSelectBuilder().
 		Select("*").
 		From("records").
-		Limit(qty).
+		Limit(int(state.PageSize)).
 		Offset(offset)
 
 	if direction == "DESC" {
@@ -219,7 +232,7 @@ func (c *Container) getRecords(ctx context.Context, state TableState) (*[]Record
 		return nil, 0, err
 	}
 
-	return &rows, total/qty + 1, nil
+	return &rows, total / state.PageSize, nil
 }
 
 func mapRecordIntoView(r Record) views.ViewRecord {

@@ -1,6 +1,6 @@
 package views
 
-templ RootLayout(title string, records []ViewRecord, page, totalPages string){
+templ RootLayout(title string, records []ViewRecord, page, totalPages, pageSize string) {
 	<html>
 		<head>
 			<title>{ title }</title>
@@ -10,7 +10,7 @@ templ RootLayout(title string, records []ViewRecord, page, totalPages string){
 		</head>
 		<body>
 			@Controls()
-			@RecordTable(records, page, totalPages) 
+			@RecordTable(records, page, totalPages, pageSize) 
 		</body>
 	</html>
 }
