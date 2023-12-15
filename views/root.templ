@@ -2,8 +2,12 @@ package views
 
 templ RootLayout(title string, records []ViewRecord) {
 	<html>
-		<head><title>{ title }</title></head>
+		<head>
+			<title>{ title }</title>
+			<script src="https://unpkg.com/htmx.org@1.9.9"></script>
+		</head>
 		<body>
+			@Controls()
 			@RecordTable(records)
 		</body>
 	</html>

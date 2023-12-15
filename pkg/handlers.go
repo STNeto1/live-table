@@ -46,9 +46,12 @@ func (c *Container) IndexHandler(ctx *fiber.Ctx) error {
 func (c *Container) ReseedHandler(ctx *fiber.Ctx) error {
 	if err := c.reseed(ctx.Context()); err != nil {
 		// do something
+		log.Printf("failed to reseed: %v\n", err)
 	}
 
-	return nil
+	controls := views.Controls()
+
+	return render(controls, ctx)
 }
 
 func (c *Container) reseed(ctx context.Context) error {
