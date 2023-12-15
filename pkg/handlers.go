@@ -91,21 +91,7 @@ func (c *Container) RecordsWsHandler(ws *websocket.Conn) {
 					continue
 				}
 
-				rows, err := c.getRecords(context.Background(), *states[ws])
-				if err != nil {
-					log.Printf("failed to get records: %v\n", err)
-					continue
-				}
-
-				component := views.RecordTable(mapRecordsIntoView(rows), fmt.Sprintf("%d", states[ws].Page), "100")
-
-				htmlWriter := &bytes.Buffer{}
-				if err := component.Render(context.Background(), htmlWriter); err != nil {
-					log.Println("error rendering component:", err)
-					continue
-				}
-
-				broadcast <- string(htmlWriter.Bytes())
+				c.updateConnectionTableView(ws, states[ws])
 			}
 
 			if payload.Event == "change_page" {
@@ -116,27 +102,32 @@ func (c *Container) RecordsWsHandler(ws *websocket.Conn) {
 
 				states[ws].Page = uint(parsed)
 
-				rows, err := c.getRecords(context.Background(), *states[ws])
-				if err != nil {
-					log.Printf("failed to get records: %v\n", err)
-					continue
-				}
+				c.updateConnectionTableView(ws, states[ws])
 
-				component := views.RecordTable(mapRecordsIntoView(rows), fmt.Sprintf("%d", states[ws].Page), "100")
-
-				htmlWriter := &bytes.Buffer{}
-				if err := component.Render(context.Background(), htmlWriter); err != nil {
-					log.Println("error rendering component:", err)
-					continue
-				}
-
-				broadcast <- string(htmlWriter.Bytes())
 			}
 
 		} else {
 			log.Println("websocket message received of type", messageType)
 		}
 	}
+}
+
+func (c *Container) updateConnectionTableView(ws *websocket.Conn, state *TableState) {
+	rows, err := c.getRecords(context.Background(), *states[ws])
+	if err != nil {
+		log.Printf("failed to get records: %v\n", err)
+		return
+	}
+
+	component := views.RecordTable(mapRecordsIntoView(rows), fmt.Sprintf("%d", states[ws].Page), "100")
+
+	htmlWriter := &bytes.Buffer{}
+	if err := component.Render(context.Background(), htmlWriter); err != nil {
+		log.Println("error rendering component:", err)
+		return
+	}
+
+	broadcast <- string(htmlWriter.Bytes())
 }
 
 func (c *Container) reseed(ctx context.Context) error {
