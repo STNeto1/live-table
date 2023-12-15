@@ -241,6 +241,7 @@ type Number interface {
 	constraints.Integer
 }
 
+// source -> https://stackoverflow.com/a/70370013
 func numberToStr[T Number](n T) string {
 	return fmt.Sprintf("%d", n)
 }
