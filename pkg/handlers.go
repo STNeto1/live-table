@@ -36,7 +36,7 @@ func render(component templ.Component, c *fiber.Ctx) error {
 }
 
 func (c *Container) IndexHandler(ctx *fiber.Ctx) error {
-	rows, err := c.getRecords(ctx.Context(), TableState{
+	rows, pages, err := c.getRecords(ctx.Context(), TableState{
 		Page: 1,
 	})
 	if err != nil {
@@ -45,7 +45,7 @@ func (c *Container) IndexHandler(ctx *fiber.Ctx) error {
 		rows = &[]Record{}
 	}
 
-	root := views.RootLayout("Page Title", mapRecordsIntoView(rows))
+	root := views.RootLayout("Page Title", mapRecordsIntoView(rows), "1", numberToStr(pages))
 
 	return render(root, ctx)
 }
@@ -114,13 +114,13 @@ func (c *Container) RecordsWsHandler(ws *websocket.Conn) {
 }
 
 func (c *Container) updateConnectionTableView(ws *websocket.Conn, state *TableState) {
-	rows, err := c.getRecords(context.Background(), *states[ws])
+	rows, pages, err := c.getRecords(context.Background(), *states[ws])
 	if err != nil {
 		log.Printf("failed to get records: %v\n", err)
 		return
 	}
 
-	component := views.RecordTable(mapRecordsIntoView(rows), numberToStr(state.Page), "100")
+	component := views.RecordTable(mapRecordsIntoView(rows), numberToStr(state.Page), numberToStr(pages))
 
 	htmlWriter := &bytes.Buffer{}
 	if err := component.Render(context.Background(), htmlWriter); err != nil {
@@ -182,14 +182,14 @@ var availableColumns = []string{
 	"created_at",
 }
 
-func (c *Container) getRecords(ctx context.Context, state TableState) (*[]Record, error) {
+func (c *Container) getRecords(ctx context.Context, state TableState) (*[]Record, int, error) {
 	qty := 10
 	order := "id"
 	direction := "DESC"
 	offset := int(state.Page-1) * qty
 
 	if !slices.Contains(availableColumns, "id") {
-		return nil, fmt.Errorf("invalid column")
+		order = "id"
 	}
 
 	rows := make([]Record, qty)
@@ -210,10 +210,16 @@ func (c *Container) getRecords(ctx context.Context, state TableState) (*[]Record
 
 	if err := c.conn.SelectContext(ctx, &rows, sql, args...); err != nil {
 		log.Printf("failed to select records: %v\n", err)
-		return nil, err
+		return nil, 0, err
 	}
 
-	return &rows, nil
+	var total int
+	if err := c.conn.GetContext(ctx, &total, "SELECT COUNT(*) FROM records"); err != nil {
+		log.Printf("failed to get total: %v\n", err)
+		return nil, 0, err
+	}
+
+	return &rows, total/qty + 1, nil
 }
 
 func mapRecordIntoView(r Record) views.ViewRecord {
