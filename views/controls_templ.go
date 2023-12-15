@@ -22,7 +22,7 @@ func Controls() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		templ_7745c5c3_Ctx = templ.ClearChildren(templ_7745c5c3_Ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div hx-ext=\"ws\" ws-connect=\"/ws\"><form id=\"form\" ws-send><input type=\"hidden\" name=\"event\" value=\"reseed\"> <button type=\"submit\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<wc-controls hx-ext=\"ws\" ws-connect=\"/ws\"><form id=\"form\" ws-send><input type=\"hidden\" name=\"event\" value=\"reseed\"> <button type=\"submit\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -31,16 +31,7 @@ func Controls() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button></form><form id=\"page-form\" ws-send><input type=\"hidden\" name=\"event\" value=\"change_page\"> <input type=\"hidden\" name=\"to_page\" value=\"2\"> <button type=\"submit\">")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Var3 := `2`
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button></form></div>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button></form><div id=\"pages\" style=\"display: flex\"></div></wc-controls>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -5,11 +5,12 @@ templ RootLayout(title string, records []ViewRecord) {
 		<head>
 			<title>{ title }</title>
 			<script src="https://unpkg.com/htmx.org@1.9.9"></script>
-            <script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
+			<script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
+			<script src="/public/wc.js"></script>
 		</head>
 		<body>
 			@Controls()
-			@RecordTable(records)
+			@RecordTable(records, "1", "100")
 		</body>
 	</html>
 }

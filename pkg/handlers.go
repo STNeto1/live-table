@@ -97,7 +97,7 @@ func (c *Container) RecordsWsHandler(ws *websocket.Conn) {
 					continue
 				}
 
-				component := views.RecordTable(mapRecordsIntoView(rows))
+				component := views.RecordTable(mapRecordsIntoView(rows), fmt.Sprintf("%d", states[ws].Page), "100")
 
 				htmlWriter := &bytes.Buffer{}
 				if err := component.Render(context.Background(), htmlWriter); err != nil {
@@ -122,7 +122,7 @@ func (c *Container) RecordsWsHandler(ws *websocket.Conn) {
 					continue
 				}
 
-				component := views.RecordTable(mapRecordsIntoView(rows))
+				component := views.RecordTable(mapRecordsIntoView(rows), fmt.Sprintf("%d", states[ws].Page), "100")
 
 				htmlWriter := &bytes.Buffer{}
 				if err := component.Render(context.Background(), htmlWriter); err != nil {

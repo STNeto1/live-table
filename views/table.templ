@@ -9,8 +9,8 @@ type ViewRecord struct {
 	CreatedAt string
 }
 
-templ RecordTable(records []ViewRecord) {
-	<table id="records" hx-swap-oob="true">
+templ RecordTable(records []ViewRecord, currentPage string, pages string) {
+	<table id="records" hx-swap-oob="true" data-current-page={ currentPage } data-pages={ pages }>
 		<thead>
 			<tr>
 				<td>ID</td>

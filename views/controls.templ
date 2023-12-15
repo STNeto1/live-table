@@ -1,15 +1,11 @@
 package views
 
 templ Controls() {
-	<div hx-ext="ws" ws-connect="/ws">
+	<wc-controls hx-ext="ws" ws-connect="/ws">
 		<form id="form" ws-send>
 			<input type="hidden" name="event" value="reseed"/>
 			<button type="submit">Reseed</button>
 		</form>
-		<form id="page-form" ws-send>
-			<input type="hidden" name="event" value="change_page"/>
-			<input type="hidden" name="to_page" value="2"/>
-			<button type="submit">2</button>
-		</form>
-	</div>
+		<div id="pages" style="display: flex"></div>
+	</wc-controls>
 }
