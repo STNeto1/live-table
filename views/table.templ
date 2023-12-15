@@ -1,0 +1,37 @@
+package views
+
+type ViewRecord struct {
+	ID        string
+	Name      string
+	Value     string
+	Value2    string
+	Value3    string
+	CreatedAt string
+}
+
+templ RecordTable(records []ViewRecord) {
+	<table>
+		<thead>
+			<tr>
+				<td>ID</td>
+				<td>Name</td>
+				<td>Value</td>
+				<td>Value 2</td>
+				<td>Value 3</td>
+				<td>Created At</td>
+			</tr>
+		</thead>
+		<tbody>
+			for _, record := range records {
+				<tr>
+					<td>{ record.ID }</td>
+					<td>{ record.Name }</td>
+					<td>{ record.Value }</td>
+					<td>{ record.Value2 }</td>
+					<td>{ record.Value3 }</td>
+					<td>{ record.CreatedAt }</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}

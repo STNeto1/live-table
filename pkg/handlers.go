@@ -2,22 +2,16 @@ package pkg
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
+	"github.com/a-h/templ"
 	"github.com/go-faker/faker/v4"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
+	"github.com/stneto1/htmx-webcomponents/views"
 )
-
-type Record struct {
-	ID        int64     `db:"id"`
-	Name      string    `db:"name"`
-	Value     string    `db:"value"`
-	Value2    int64     `db:"value_2"`
-	Value3    time.Time `db:"value_3"`
-	CreatedAt time.Time `db:"created_at"`
-}
 
 type Container struct {
 	conn *sqlx.DB
@@ -27,6 +21,24 @@ func NewContainer(conn *sqlx.DB) *Container {
 	return &Container{
 		conn: conn,
 	}
+}
+
+func render(component templ.Component, c *fiber.Ctx) error {
+	c.Response().Header.SetContentType("text/html")
+	return component.Render(c.Context(), c.Response().BodyWriter())
+}
+
+func (c *Container) IndexHandler(ctx *fiber.Ctx) error {
+	rows, err := c.getRecords(ctx.Context())
+	if err != nil {
+		log.Printf("failed to get records: %v\n", err)
+
+		rows = &[]Record{}
+	}
+
+	root := views.RootLayout("Page Title", mapRecordsIntoView(rows))
+
+	return render(root, ctx)
 }
 
 func (c *Container) ReseedHandler(ctx *fiber.Ctx) error {
@@ -77,4 +89,41 @@ func (c *Container) reseed(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (c *Container) getRecords(ctx context.Context) (*[]Record, error) {
+	qty := 10
+	order := "id"
+	direction := "DESC"
+
+	rows := make([]Record, qty)
+
+	query := fmt.Sprintf("SELECT * FROM records ORDER BY %s %s LIMIT ?", order, direction)
+	if err := c.conn.SelectContext(ctx, &rows, query, qty); err != nil {
+		log.Printf("failed to select records: %v\n", err)
+		return nil, err
+	}
+
+	return &rows, nil
+}
+
+func mapRecordIntoView(r Record) views.ViewRecord {
+	return views.ViewRecord{
+		ID:        fmt.Sprintf("%d", r.ID),
+		Name:      r.Name,
+		Value:     r.Value,
+		Value2:    fmt.Sprintf("%d", r.Value2),
+		Value3:    r.Value3.Format(time.RFC3339),
+		CreatedAt: r.CreatedAt.Format(time.RFC3339),
+	}
+}
+
+func mapRecordsIntoView(rs *[]Record) []views.ViewRecord {
+	vrs := make([]views.ViewRecord, len(*rs))
+
+	for idx, r := range *rs {
+		vrs[idx] = mapRecordIntoView(r)
+	}
+
+	return vrs
 }

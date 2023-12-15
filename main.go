@@ -1,33 +1,21 @@
 package main
 
 import (
-	"github.com/a-h/templ"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/stneto1/htmx-webcomponents/pkg"
-	"github.com/stneto1/htmx-webcomponents/views"
 )
 
 func main() {
-	conn := pkg.CreateConnection()
+	conn := pkg.CreateConnection(false) // boolean for whether to log queries
 	container := pkg.NewContainer(conn)
 
 	app := fiber.New(fiber.Config{})
 	app.Use(logger.New())
 	app.Static("/public", "./public")
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		btn := views.RootLayout("Page Title")
-
-		return render(btn, c)
-	})
-
+	app.Get("/", container.IndexHandler)
 	app.Post("/reseed", container.ReseedHandler)
 
 	app.Listen(":3000")
-}
-
-func render(component templ.Component, c *fiber.Ctx) error {
-	c.Response().Header.SetContentType("text/html")
-	return component.Render(c.Context(), c.Response().BodyWriter())
 }

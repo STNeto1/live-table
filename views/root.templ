@@ -1,10 +1,10 @@
 package views
 
-templ RootLayout(title string) {
+templ RootLayout(title string, records []ViewRecord) {
 	<html>
 		<head><title>{ title }</title></head>
 		<body>
-			@Hello()
+			@RecordTable(records)
 		</body>
 	</html>
 }

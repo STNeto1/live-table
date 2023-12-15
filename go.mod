@@ -8,6 +8,9 @@ require (
 	github.com/gofiber/fiber/v2 v2.51.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/libsql/libsql-client-go v0.0.0-20231212112702-ff51beb13681
+	github.com/rs/zerolog v1.31.0
+	github.com/simukti/sqldb-logger v0.0.0-20230108155151-646c1a075551
+	github.com/simukti/sqldb-logger/logadapter/zerologadapter v0.0.0-20230108155151-646c1a075551
 	modernc.org/sqlite v1.28.0
 )
 
