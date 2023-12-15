@@ -22,7 +22,7 @@ func Controls() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		templ_7745c5c3_Ctx = templ.ClearChildren(templ_7745c5c3_Ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div id=\"controls\"><button hx-post=\"/reseed\" hx-target=\"#controls\" hx-swap=\"outerHTML\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div hx-ext=\"ws\" ws-connect=\"/ws\"><form id=\"form\" ws-send><input type=\"hidden\" name=\"event\" value=\"reseed\"> <button type=\"submit\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -31,7 +31,7 @@ func Controls() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button></div>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button></form></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

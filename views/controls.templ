@@ -1,9 +1,10 @@
 package views
 
 templ Controls() {
-	<div id="controls">
-		<button hx-post="/reseed" hx-target="#controls" hx-swap="outerHTML">
-			Reseed
-		</button>
-	</div>
+	<div hx-ext="ws" ws-connect="/ws">
+	<form id="form" ws-send>
+      <input type="hidden" name="event" value="reseed" />
+      <button type="submit">Reseed</button>
+    </form>
+    </div>
 }

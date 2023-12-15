@@ -1,7 +1,9 @@
 package pkg
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"slices"
@@ -9,6 +11,7 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/go-faker/faker/v4"
+	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/huandu/go-sqlbuilder"
 	"github.com/jmoiron/sqlx"
@@ -52,6 +55,59 @@ func (c *Container) ReseedHandler(ctx *fiber.Ctx) error {
 	controls := views.Controls()
 
 	return render(controls, ctx)
+}
+
+func (c *Container) RecordsWsHandler(ws *websocket.Conn) {
+	defer func() {
+		unregister <- ws
+		ws.Close()
+	}()
+
+	register <- ws
+
+	for {
+		messageType, msg, err := ws.ReadMessage()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Println("read error:", err)
+			}
+
+			break
+		}
+
+		if messageType == websocket.TextMessage {
+			var payload EventBody
+			if err := json.Unmarshal(msg, &payload); err != nil {
+				log.Println("error unmarshalling payload:", err)
+				continue
+			}
+
+			if payload.Event == "reseed" {
+				if err := c.reseed(context.Background()); err != nil {
+					log.Printf("failed to reseed: %v\n", err)
+					continue
+				}
+
+				rows, err := c.getRecords(context.Background())
+				if err != nil {
+					log.Printf("failed to get records: %v\n", err)
+					continue
+				}
+
+				component := views.RecordTable(mapRecordsIntoView(rows))
+
+				htmlWriter := &bytes.Buffer{}
+				if err := component.Render(context.Background(), htmlWriter); err != nil {
+					log.Println("error rendering component:", err)
+					continue
+				}
+
+				broadcast <- string(htmlWriter.Bytes())
+			}
+		} else {
+			log.Println("websocket message received of type", messageType)
+		}
+	}
 }
 
 func (c *Container) reseed(ctx context.Context) error {

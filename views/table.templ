@@ -10,7 +10,7 @@ type ViewRecord struct {
 }
 
 templ RecordTable(records []ViewRecord) {
-	<table>
+	<table id="records" hx-swap-oob="true">
 		<thead>
 			<tr>
 				<td>ID</td>

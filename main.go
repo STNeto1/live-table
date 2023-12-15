@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/stneto1/htmx-webcomponents/pkg"
@@ -16,6 +17,9 @@ func main() {
 
 	app.Get("/", container.IndexHandler)
 	app.Post("/reseed", container.ReseedHandler)
+	app.Get("/ws", websocket.New(container.RecordsWsHandler, websocket.Config{}))
+
+	go container.RunHub()
 
 	app.Listen(":3000")
 }

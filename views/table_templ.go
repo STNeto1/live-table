@@ -31,7 +31,7 @@ func RecordTable(records []ViewRecord) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		templ_7745c5c3_Ctx = templ.ClearChildren(templ_7745c5c3_Ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<table><thead><tr><td>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<table id=\"records\" hx-swap-oob=\"true\"><thead><tr><td>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
